@@ -262,7 +262,7 @@ protocols2fix = {
     # fix per accession yet
     #    '23763823d2b9b4b09dafcadc8e8edf21':
     #        [
-    #            ('anat-T1w_acq-MPRAGE', 'anat-T1w_acq-MPRAGE_run-06'), 
+    #            ('anat-T1w_acq-MPRAGE', 'anat-T1w_acq-MPRAGE_run-06'),
     #            ('anat_T2w', 'anat_T2w_run-06'),
     #            ('fmap_acq-3mm', 'fmap_acq-3mm_run-06'),
     #        ],
@@ -440,8 +440,8 @@ def infotodict(seqinfo):
 
     allowed template fields - follow python string module:
 
-    item: index within category 
-    subject: participant id 
+    item: index within category
+    subject: participant id
     seqitem: run number during scanning
     subindex: sub index within group
     session: scan index for longitudinal acq
@@ -483,9 +483,9 @@ def infotodict(seqinfo):
             # 3 - Image IOD specific specialization (optional)
             dcm_image_iod_spec = s.image_type[2]
             image_type_seqtype = {
-                'P': 'fmap',   # phase
                 'FMRI': 'func',
                 'MPR': 'anat',
+                'SWI': 'swi',
                 # 'M': 'func',  "magnitude"  -- can be for scout, anat, bold, fmap
                 'DIFFUSION': 'dwi',
                 'MIP_SAG': 'anat',  # angiography
@@ -538,6 +538,21 @@ def infotodict(seqinfo):
         # else:
         #     prefix = ''
         prefix = ''
+
+        if seqtype == 'swi' and not seqtype_label:
+            if 'SWI_Images' in s.series_description:
+                seqtype_label = 'swi'
+            elif 'mIP_Images' in s.series_description:
+                seqtype_label = 'minIP'
+            elif 'Pha_Images' in s.series_description:
+                seqtype_label = 'GRE'
+                series_info['part'] = 'phase'
+            elif 'Mag_Images' in s.series_description:
+                seqtype_label = 'GRE'
+                series_info['part'] = 'mag'
+            else:
+                # default to swi
+                seqtype_label = 'swi'
 
         # analyze s.protocol_name (series_id is based on it) for full name mapping etc
         if seqtype == 'func' and not seqtype_label:
@@ -611,7 +626,7 @@ def infotodict(seqinfo):
         #     assert s.is_derived, "Motion corrected images must be 'derived'"
 
         if s.is_motion_corrected and 'rec-' in series_info.get('bids', ''):
-            raise NotImplementedError("want to add _acq-moco but there is _acq- already")
+            raise NotImplementedError("want to add _acq-moco but there is _rec- already")
 
         def from_series_info(name):
             """A little helper to provide _name-value if series_info knows it
@@ -629,6 +644,7 @@ def infotodict(seqinfo):
             # But we want to add an indicator in case it was motion corrected
             # in the magnet. ref sample  /2017/01/03/qa
             None if not s.is_motion_corrected else 'rec-moco',
+            from_series_info('part'),
             from_series_info('dir'),
             series_info.get('bids'),
             run_label,
@@ -893,7 +909,7 @@ def parse_series_spec(series_spec):
 
     # Let's analyze first element which should tell us sequence type
     seqtype, seqtype_label = split2(split[0])
-    if seqtype not in {'anat', 'func', 'dwi', 'behav', 'fmap'}:
+    if seqtype not in {'anat', 'func', 'dwi', 'behav', 'fmap', 'swi'}:
         # It is not something we don't consume
         if bids:
             lgr.warning("It was instructed to be BIDS sequence but unknown "
