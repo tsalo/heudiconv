@@ -126,7 +126,7 @@ from glob import glob
 import logging
 lgr = logging.getLogger('heudiconv')
 
-# Terminology to hamornise and use to name variables etc
+# Terminology to harmonise and use to name variables etc
 # experiment
 #  subject
 #   [session]
@@ -556,8 +556,14 @@ def infotodict(seqinfo):
 
         # analyze s.protocol_name (series_id is based on it) for full name mapping etc
         if seqtype == 'func' and not seqtype_label:
-            if '_pace_' in series_spec:
+            if s.series_description.endswith('_SBRef'):
+                seqtype_label = 'sbref'
+            elif '_pace_' in series_spec:
                 seqtype_label = 'pace'  # or should it be part of seq-
+            elif 'P' in s.image_type:
+                seqtype_label = 'phase'
+            elif 'M' in s.image_type:
+                seqtype_label = 'bold'
             else:
                 # assume bold by default
                 seqtype_label = 'bold'
@@ -567,7 +573,7 @@ def infotodict(seqinfo):
                 raise ValueError("Do not know image data type yet to make decision")
             seqtype_label = {
                 # might want explicit {file_index}  ?
-                # _epi for pipolar fieldmaps, see
+                # _epi for pepolar fieldmaps, see
                 # https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#case-4-multiple-phase-encoded-directions-pepolar
                 'M': 'epi' if 'dir' in series_info else 'magnitude',
                 'P': 'phasediff',
