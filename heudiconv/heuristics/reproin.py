@@ -541,6 +541,7 @@ def infotodict(seqinfo):
         prefix = ''
 
         if seqtype == 'swi' and not seqtype_label:
+            # Reconstructed images from Siemens SWI
             if 'SWI_Images' in s.series_description:
                 seqtype_label = 'swi'
             elif 'mIP_Images' in s.series_description:
