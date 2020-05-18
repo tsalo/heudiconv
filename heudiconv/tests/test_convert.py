@@ -10,20 +10,20 @@ from heudiconv.bids import BIDSError
 
 def test_update_complex_name():
     """Unit testing for heudiconv.convert.update_complex_name(), which updates
-    filenames with the rec field if appropriate.
+    filenames with the part or rec field if appropriate.
     """
     # Standard name update
     fn = 'sub-X_ses-Y_task-Z_run-01_sbref'
     metadata = {'ImageType': ['ORIGINAL', 'PRIMARY', 'P', 'MB', 'TE3', 'ND', 'MOSAIC']}
     suffix = 3
-    out_fn_true = 'sub-X_ses-Y_task-Z_rec-phase_run-01_sbref'
+    out_fn_true = 'sub-X_ses-Y_task-Z_run-01_part-phase_sbref'
     out_fn_test = update_complex_name(metadata, fn, suffix)
     assert out_fn_test == out_fn_true
     # Catch an unsupported type and *do not* update
     fn = 'sub-X_ses-Y_task-Z_run-01_phase'
     out_fn_test = update_complex_name(metadata, fn, suffix)
     assert out_fn_test == fn
-    # Data type is missing from metadata so use suffix
+    # Data type is missing from metadata so use rec suffix
     fn = 'sub-X_ses-Y_task-Z_run-01_sbref'
     metadata = {'ImageType': ['ORIGINAL', 'PRIMARY', 'MB', 'TE3', 'ND', 'MOSAIC']}
     out_fn_true = 'sub-X_ses-Y_task-Z_rec-3_run-01_sbref'
@@ -31,7 +31,7 @@ def test_update_complex_name():
     assert out_fn_test == out_fn_true
     # Catch existing field with value that *does not match* metadata
     # and raise Exception
-    fn = 'sub-X_ses-Y_task-Z_rec-magnitude_run-01_sbref'
+    fn = 'sub-X_ses-Y_task-Z_run-01_part-phase_sbref'
     metadata = {'ImageType': ['ORIGINAL', 'PRIMARY', 'P', 'MB', 'TE3', 'ND', 'MOSAIC']}
     suffix = 3
     with pytest.raises(BIDSError):
